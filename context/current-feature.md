@@ -1,16 +1,26 @@
-# Current Feature
+# Current Feature: Stage 03 – Database Setup (MongoDB Atlas)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- Install `mongoose` and create `lib/db.ts` with a cached `connectDB()` function
+- Create `lib/models/User.ts` with clerkUserId unique index
+- Create `lib/models/Event.ts` with compound index on `{ userId, timestamp }` and unique index on `{ userId, githubId }`
+- Create `lib/models/Session.ts` with index on `{ userId, start }`
+- Create `lib/models/index.ts` re-exporting all three models
+- `npm run build` passes clean with no TypeScript errors
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- `MONGODB_URI` must be set in `.env.local` (Atlas connection string)
+- GitHub token encryption is deferred to Stage 04 — store `githubAccessToken` as plaintext with a TODO comment
+- No data is written to the database in this stage — models only
+- Keep models thin: no business logic on the model layer
+- Use module-level cached promise pattern for serverless-safe connection caching
+- `connectDB()` must throw a clear error if `MONGODB_URI` is not set
 
 ## History
 

@@ -1,16 +1,30 @@
-# Current Feature
+# Current Feature: Stage 08 – Activity Timeline UI
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- Timeline page shows events grouped by day, most recent first
+- Each event shows correct icon, time, repo badge, and message/title
+- Repo and type filters narrow the displayed events
+- Date range change re-fetches events for the new window
+- Loading and empty states render correctly
+- Page is responsive (readable on mobile)
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- Async Server Component page fetches initial events (last 7 days) directly from MongoDB and passes as props to client component
+- `Timeline.tsx` (client) groups events by calendar day in user's local timezone; re-fetches only on filter/date range change
+- `EventItem.tsx` renders icon (commit/pr_open/pr_update/pr_review), relative + absolute time, repo `Badge` (secondary), truncated message/title (80 chars)
+- `FilterBar.tsx` uses ShadCN `Input` (date range), `Select` (repo from `/api/events/repos`), `Select` (event type); filters applied client-side — no re-fetch per filter change for MVP
+- Loading state: ShadCN `Skeleton` rows (3 placeholders per day)
+- Empty state (connected): "No activity found — try syncing your GitHub account"
+- Empty state (not connected): "Connect your GitHub account to see your activity" with link to `/settings`
+- Use `Intl.DateTimeFormat` for formatting — no date library
+- Limit 200 events per fetch; no infinite scroll for MVP
+- Add "Timeline" link to the app sidebar/nav
 
 ## History
 

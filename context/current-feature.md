@@ -1,16 +1,28 @@
-# Current Feature
+# Current Feature: Stage 05 – GitHub Event Sync
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- `lib/github.ts` implements `getUserRepos`, `getCommits`, `getPullRequests` using `fetch` with Bearer auth and rate limit awareness
+- `lib/events.ts` implements `normaliseCommit` and `normalisePR` mapping raw GitHub data to `EventDocument`
+- `POST /api/github/sync` authenticates via Clerk, decrypts token, syncs last 14 days (or since `lastSyncAt`), returns `{ inserted, skipped, repos }`
+- Duplicate events are silently skipped via unique index on `{ userId, githubId }` — running sync twice produces no duplicates
+- GitHub 401 marks `githubConnected: false` and returns 401; GitHub 403 returns 429 with retry hint
+- Per-repo failures are logged but do not abort the full sync
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- No Octokit — use `fetch` directly
+- Limit: 100 commits and 50 PRs per repo (no deep pagination for MVP)
+- Filter commits by authenticated user (`author` param on GitHub API)
+- Up to 50 repos (owned + member, sorted by last updated)
+- `normaliseCommit`: type `commit`, githubId = SHA, timestamp = author date, metadata.message = first line
+- `normalisePR`: type `pr_open` if created_at is recent else `pr_update`, githubId = node_id + event type, metadata includes prNumber, prTitle, url
+- Sync runs synchronously within the request (no background jobs for MVP)
+- No new env vars required
 
 ## History
 

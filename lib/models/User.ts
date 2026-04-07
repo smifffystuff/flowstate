@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model } from 'mongoose'
 export interface IUser extends Document {
   clerkUserId: string
   email: string
-  // TODO: encrypt in Stage 04 using lib/crypto.ts (AES-256-GCM)
   githubAccessToken: string
   githubConnected: boolean
   createdAt: Date

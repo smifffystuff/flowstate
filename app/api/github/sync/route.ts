@@ -3,9 +3,11 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import User from '@/lib/models/User'
 import Event from '@/lib/models/Event'
+import Session from '@/lib/models/Session'
 import { decrypt } from '@/lib/crypto'
 import { getUserRepos, getCommits, getPullRequests } from '@/lib/github'
 import { normaliseCommit, normalisePR, type EventDocument } from '@/lib/events'
+import { detectSessions } from '@/lib/sessions'
 
 export async function POST() {
   const { userId } = await auth()
@@ -111,5 +113,18 @@ export async function POST() {
 
   await User.findOneAndUpdate({ clerkUserId: userId }, { lastSyncAt: new Date() })
 
-  return NextResponse.json({ inserted, skipped, repos: reposProcessed })
+  // Recompute sessions for the synced window
+  const sessionFrom = since
+  const sessionTo = new Date()
+  const events = await Event.find({
+    userId,
+    timestamp: { $gte: sessionFrom, $lte: sessionTo },
+  }).sort({ timestamp: 1 })
+  const sessions = detectSessions(events)
+  await Session.deleteMany({ userId, start: { $gte: sessionFrom, $lte: sessionTo } })
+  if (sessions.length > 0) {
+    await Session.insertMany(sessions)
+  }
+
+  return NextResponse.json({ inserted, skipped, repos: reposProcessed, sessions: sessions.length })
 }

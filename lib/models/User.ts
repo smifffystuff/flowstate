@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string
   githubAccessToken: string
   githubConnected: boolean
+  lastSyncAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -15,6 +16,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true },
     githubAccessToken: { type: String, default: '' },
     githubConnected: { type: Boolean, default: false },
+    lastSyncAt: { type: Date },
   },
   { timestamps: true }
 )

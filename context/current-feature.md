@@ -1,30 +1,16 @@
-# Current Feature: Stage 08 – Activity Timeline UI
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Timeline page shows events grouped by day, most recent first
-- Each event shows correct icon, time, repo badge, and message/title
-- Repo and type filters narrow the displayed events
-- Date range change re-fetches events for the new window
-- Loading and empty states render correctly
-- Page is responsive (readable on mobile)
+<!-- bullet points of what success looks like -->
 
 ## Notes
 
-- Async Server Component page fetches initial events (last 7 days) directly from MongoDB and passes as props to client component
-- `Timeline.tsx` (client) groups events by calendar day in user's local timezone; re-fetches only on filter/date range change
-- `EventItem.tsx` renders icon (commit/pr_open/pr_update/pr_review), relative + absolute time, repo `Badge` (secondary), truncated message/title (80 chars)
-- `FilterBar.tsx` uses ShadCN `Input` (date range), `Select` (repo from `/api/events/repos`), `Select` (event type); filters applied client-side — no re-fetch per filter change for MVP
-- Loading state: ShadCN `Skeleton` rows (3 placeholders per day)
-- Empty state (connected): "No activity found — try syncing your GitHub account"
-- Empty state (not connected): "Connect your GitHub account to see your activity" with link to `/settings`
-- Use `Intl.DateTimeFormat` for formatting — no date library
-- Limit 200 events per fetch; no infinite scroll for MVP
-- Add "Timeline" link to the app sidebar/nav
+<!-- additional context, constraints, or details -->
 
 ## History
 
@@ -35,3 +21,4 @@ In Progress
 - **Stage 05 – GitHub Event Sync**: Added `lib/github.ts` (thin `fetch` wrapper — `getUserRepos`, `getCommits`, `getPullRequests` with rate-limit and 401/403 error handling), `lib/events.ts` (`normaliseCommit`, `normalisePR` mapping raw GitHub data to `EventDocument`), and `POST /api/github/sync` route. Sync fetches up to 50 repos × 100 commits + 50 PRs, bulk-upserts with deduplication via unique index on `{ userId, githubId }`, and updates `User.lastSyncAt`. Per-repo errors are logged but non-fatal. `User` model extended with `lastSyncAt`. Build passes clean.
 - **Stage 06 – Events API**: Added `GET /api/events` with `from`/`to`/`repo`/`type`/`limit`/`offset` query params, date validation (400), type enum validation (`commit`, `pr_open`, `pr_update`, `pr_review`), limit clamped to 500, sorted by `timestamp` desc, returns `{ events, total, hasMore }`. Added `GET /api/events/repos` returning distinct sorted repo names for the user. Both routes return 401 for unauthenticated requests. Build passes clean.
 - **Stage 07 – Flow Session Detection Engine**: Added `lib/sessions.ts` with `detectSessions()` gap-heuristic algorithm (`SESSION_GAP_MINUTES = 10`), computing `start`, `end`, `durationMinutes`, `eventIds`, `repos`, `repoCount`, and `contextSwitches` per session; discards sessions with <2 events or <1 min duration. Added `POST /api/sessions/compute` (idempotent delete-then-insert for a time window) and `GET /api/sessions` (sorted descending by `start`, `from`/`to` params with date validation). Updated `POST /api/github/sync` to recompute sessions automatically after inserting events. Build passes clean.
+- **Stage 08 – Activity Timeline UI**: Added `app/(app)/timeline/page.tsx` (async Server Component fetching last 7 days of events + distinct repos directly from MongoDB), `components/timeline/Timeline.tsx` (client component grouping events by local calendar day, re-fetches on date range change, client-side repo/type filtering, skeleton loading + empty states), `components/timeline/EventItem.tsx` (type icon, relative + absolute time via `Intl.DateTimeFormat`, repo Badge, truncated message/title), `components/timeline/FilterBar.tsx` (date range inputs, repo Select, type Select using ShadCN primitives). Sidebar Timeline link was already present. Build passes clean.

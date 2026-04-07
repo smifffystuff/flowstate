@@ -1,16 +1,24 @@
-# Current Feature
+# Current Feature: Stage 06 – Events API
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- `GET /api/events` returns paginated events for the authenticated user with date range, repo, and type filters
+- `GET /api/events/repos` returns distinct repo names for the current user
+- Unauthenticated requests return 401
+- Invalid date params return 400 with a descriptive message
+- `limit` is clamped to max 500; `type` is validated against the known enum
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- Query params: `from` (default 14 days ago), `to` (default now), `repo`, `type`, `limit` (default 200), `offset` (default 0)
+- Valid `type` values: `commit`, `pr_open`, `pr_update`, `pr_review`
+- Sort events by `timestamp` descending
+- Events are read-only via the API — creation only happens via the sync route
+- Response shape: `{ events: [...], total: number, hasMore: boolean }`
 
 ## History
 

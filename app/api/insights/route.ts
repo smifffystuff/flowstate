@@ -6,11 +6,10 @@ import Event from '@/lib/models/Event'
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date)
-  const day = d.getDay()
-  // Monday = 0 offset, Sunday = 6 offset
+  const day = d.getUTCDay()
   const diff = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
+  d.setUTCDate(d.getUTCDate() + diff)
+  d.setUTCHours(0, 0, 0, 0)
   return d
 }
 
@@ -86,6 +85,24 @@ export async function GET(request: NextRequest) {
     { $project: { _id: 0, repo: '$_id', eventCount: 1 } },
   ])
 
+  // Daily minutes: sum session durations per calendar day (UTC)
+  const minutesByDay = new Map<string, number>()
+  for (const s of sessions) {
+    const key = s.start.toISOString().slice(0, 10)
+    minutesByDay.set(key, (minutesByDay.get(key) ?? 0) + s.durationMinutes)
+  }
+  // Generate every day in the window so zero-minute days are included
+  const dailyMinutes: { date: string; minutes: number }[] = []
+  const cursor = new Date(from)
+  cursor.setUTCHours(0, 0, 0, 0)
+  const windowEnd = new Date(to)
+  windowEnd.setUTCHours(0, 0, 0, 0)
+  while (cursor <= windowEnd) {
+    const key = cursor.toISOString().slice(0, 10)
+    dailyMinutes.push({ date: key, minutes: Math.round(minutesByDay.get(key) ?? 0) })
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+
   return NextResponse.json({
     totalCodingMinutes,
     flowSessionCount,
@@ -95,5 +112,6 @@ export async function GET(request: NextRequest) {
     avgContextSwitchesPerDay,
     activeDays,
     topRepos: topReposAgg,
+    dailyMinutes,
   })
 }

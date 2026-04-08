@@ -2,17 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { MetricCard } from './MetricCard'
+import { ActivityBarChart } from './ActivityBarChart'
+import { SessionTimeline } from './SessionTimeline'
+import { RepoDistributionChart } from './RepoDistributionChart'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface InsightsData {
@@ -24,6 +19,7 @@ interface InsightsData {
   avgContextSwitchesPerDay: number
   activeDays: number
   topRepos: { repo: string; eventCount: number }[]
+  dailyMinutes: { date: string; minutes: number }[]
 }
 
 type Range = 'this-week' | 'last-7' | 'last-14'
@@ -45,8 +41,9 @@ function getRangeDates(range: Range): { from: string; to: string } {
     const day = d.getDay()
     const diff = day === 0 ? -6 : 1 - day
     d.setDate(d.getDate() + diff)
-    d.setHours(0, 0, 0, 0)
-    return { from: d.toISOString(), to }
+    // Use UTC midnight of the local Monday date to avoid timezone shift on the server
+    const from = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())).toISOString()
+    return { from, to }
   }
 
   const days = range === 'last-7' ? 7 : 14
@@ -65,7 +62,6 @@ function ActiveDaysRow({
 }) {
   const now = new Date()
 
-  // Build array of 7 days in the window (Mon–Sun of current week or last 7/14 days)
   const days: { label: string; date: Date }[] = []
 
   if (range === 'this-week') {
@@ -80,7 +76,6 @@ function ActiveDaysRow({
       days.push({ label: DAY_LABELS[i], date: d })
     }
   } else {
-    // For last-7/last-14, show Mon–Sun of current week for simplicity
     const monday = new Date(now)
     const day = monday.getDay()
     const diff = day === 0 ? -6 : 1 - day
@@ -93,9 +88,6 @@ function ActiveDaysRow({
     }
   }
 
-  // We know activeDays count but not which days — highlight the first activeDays days
-  // that are not in the future. This is an approximation; exact per-day data requires
-  // a more granular API response.
   const today = new Date()
   today.setHours(23, 59, 59, 999)
   let remaining = activeDays
@@ -147,6 +139,10 @@ function MetricsSkeleton() {
         ))}
       </div>
       <Skeleton className="h-24 w-full rounded-lg" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Skeleton className="h-52 w-full rounded-lg" />
+        <Skeleton className="h-52 w-full rounded-lg" />
+      </div>
       <Skeleton className="h-40 w-full rounded-lg" />
     </div>
   )
@@ -218,6 +214,7 @@ export function DashboardClient({ initialData, initialRange }: DashboardClientPr
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Metric cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
               label="Total Coding Time"
@@ -242,32 +239,17 @@ export function DashboardClient({ initialData, initialRange }: DashboardClientPr
 
           <ActiveDaysRow activeDays={data.activeDays} range={range} />
 
+          {/* Charts row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.dailyMinutes.length > 0 && (
+              <ActivityBarChart data={data.dailyMinutes} />
+            )}
+            <SessionTimeline />
+          </div>
+
+          {/* Repo distribution */}
           {data.topRepos.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Top Repositories
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Repository</TableHead>
-                      <TableHead className="text-right">Events</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.topRepos.map((r) => (
-                      <TableRow key={r.repo}>
-                        <TableCell className="font-mono text-sm">{r.repo}</TableCell>
-                        <TableCell className="text-right">{r.eventCount}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <RepoDistributionChart repos={data.topRepos} />
           )}
         </div>
       )}

@@ -1,16 +1,26 @@
-# Current Feature
+# Current Feature: Stage 09 – Dashboard Metrics & Summary Cards
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- `GET /api/insights` returns computed metrics (totalCodingMinutes, flowSessionCount, avgFlowDurationMinutes, longestFlowMinutes, contextSwitchesTotal, avgContextSwitchesPerDay, activeDays, topRepos) for a given date window
+- Dashboard page replaces placeholder with real layout: 4 metric cards, active days row, top repos table
+- `MetricCard` component wraps ShadCN Card with label/value/subtext/trend props
+- Date range selector (Tabs: This Week / Last 7 Days / Last 14 Days) triggers client-side re-fetch
+- Skeleton loading states and empty state with "Sync Now" button render correctly
+- All four metric cards show non-zero values after a sync
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- `GET /api/insights` defaults `from` to start of current week (Monday), `to` to now; returns 200 with zero values if no data
+- `totalCodingMinutes` = sum of session `durationMinutes`; `contextSwitchesTotal` = sum of session `contextSwitches`; `topRepos` = top 5 repos by event count via aggregation
+- Dashboard `page.tsx` is an async Server Component — fetches directly from MongoDB, passes data as props to client sub-components
+- Date range tabs are a client component that re-fetches `GET /api/insights` with updated params
+- Empty state shows "No activity yet. Sync your GitHub account to get started." with a Sync Now button calling `POST /api/github/sync`
+- Keep layout clean and spacious — first impression after login
 
 ## History
 

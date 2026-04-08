@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { connectDB } from "@/lib/db";
+import User from "@/lib/models/User";
+import { AppSidebar } from "@/components/AppSidebar";
 
 export default async function AppLayout({
   children,
@@ -10,30 +12,14 @@ export default async function AppLayout({
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  await connectDB();
+  const user = await User.findOne({ clerkUserId: userId }).lean();
+  const githubConnected = user?.githubConnected ?? false;
+  const lastSyncAt = user?.lastSyncAt ? user.lastSyncAt.toISOString() : null;
+
   return (
     <div className="flex flex-1">
-      <aside className="w-56 border-r border-border bg-background px-4 py-6 flex flex-col gap-1">
-        <nav className="flex flex-col gap-1 text-sm">
-          <Link
-            href="/dashboard"
-            className="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/timeline"
-            className="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            Timeline
-          </Link>
-          <Link
-            href="/settings"
-            className="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-          >
-            Settings
-          </Link>
-        </nav>
-      </aside>
+      <AppSidebar githubConnected={githubConnected} lastSyncAt={lastSyncAt} />
       <div className="flex-1 px-8 py-6">{children}</div>
     </div>
   );

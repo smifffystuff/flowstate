@@ -62,6 +62,10 @@ async function githubFetch<T>(token: string, path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export async function getAuthenticatedUser(token: string): Promise<{ login: string }> {
+  return githubFetch<{ login: string }>(token, '/user')
+}
+
 export async function getUserRepos(token: string): Promise<Repo[]> {
   const raw = await githubFetch<Array<{
     owner: { login: string }
@@ -82,10 +86,11 @@ export async function getCommits(
   token: string,
   owner: string,
   repo: string,
-  since: Date
+  since: Date,
+  authorLogin: string
 ): Promise<RawCommit[]> {
   const sinceISO = since.toISOString()
-  const path = `/repos/${owner}/${repo}/commits?author=@me&since=${sinceISO}&per_page=100`
+  const path = `/repos/${owner}/${repo}/commits?author=${encodeURIComponent(authorLogin)}&since=${sinceISO}&per_page=100`
   try {
     return await githubFetch<RawCommit[]>(token, path)
   } catch (err: unknown) {

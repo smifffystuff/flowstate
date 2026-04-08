@@ -5,7 +5,7 @@ import User from '@/lib/models/User'
 import Event from '@/lib/models/Event'
 import Session from '@/lib/models/Session'
 import { decrypt } from '@/lib/crypto'
-import { getUserRepos, getCommits, getPullRequests } from '@/lib/github'
+import { getAuthenticatedUser, getUserRepos, getCommits, getPullRequests } from '@/lib/github'
 import { normaliseCommit, normalisePR, type EventDocument } from '@/lib/events'
 import { detectSessions } from '@/lib/sessions'
 
@@ -29,23 +29,39 @@ export async function POST() {
     return NextResponse.json({ error: 'Failed to decrypt GitHub token' }, { status: 500 })
   }
 
+  await User.findOneAndUpdate({ clerkUserId: userId }, { syncStatus: 'syncing', syncError: null })
+
   const since = user.lastSyncAt ?? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
 
+  let githubLogin: string
   let repos: Awaited<ReturnType<typeof getUserRepos>>
   try {
-    repos = await getUserRepos(token)
+    const [ghUser, ghRepos] = await Promise.all([getAuthenticatedUser(token), getUserRepos(token)])
+    githubLogin = ghUser.login
+    repos = ghRepos
   } catch (err: unknown) {
     const status = (err as { status?: number }).status
     if (status === 401) {
-      await User.findOneAndUpdate({ clerkUserId: userId }, { githubConnected: false })
+      await User.findOneAndUpdate(
+        { clerkUserId: userId },
+        { githubConnected: false, syncStatus: 'error', syncError: 'GitHub token invalid. Please reconnect.' }
+      )
       return NextResponse.json({ error: 'GitHub token invalid. Please reconnect.' }, { status: 401 })
     }
     if (status === 403) {
+      await User.findOneAndUpdate(
+        { clerkUserId: userId },
+        { syncStatus: 'error', syncError: 'GitHub rate limit exceeded. Please retry later.' }
+      )
       return NextResponse.json(
         { error: 'GitHub rate limit exceeded. Please retry later.' },
         { status: 429 }
       )
     }
+    await User.findOneAndUpdate(
+      { clerkUserId: userId },
+      { syncStatus: 'error', syncError: 'Failed to fetch repositories' }
+    )
     return NextResponse.json({ error: 'Failed to fetch repositories' }, { status: 502 })
   }
 
@@ -55,7 +71,7 @@ export async function POST() {
   for (const repo of repos) {
     try {
       const [commits, prs] = await Promise.all([
-        getCommits(token, repo.owner, repo.name, since),
+        getCommits(token, repo.owner, repo.name, since, githubLogin),
         getPullRequests(token, repo.owner, repo.name, since),
       ])
 
@@ -70,13 +86,20 @@ export async function POST() {
     } catch (err: unknown) {
       const status = (err as { status?: number }).status
       if (status === 401) {
-        await User.findOneAndUpdate({ clerkUserId: userId }, { githubConnected: false })
+        await User.findOneAndUpdate(
+          { clerkUserId: userId },
+          { githubConnected: false, syncStatus: 'error', syncError: 'GitHub token invalid. Please reconnect.' }
+        )
         return NextResponse.json(
           { error: 'GitHub token invalid. Please reconnect.' },
           { status: 401 }
         )
       }
       if (status === 403) {
+        await User.findOneAndUpdate(
+          { clerkUserId: userId },
+          { syncStatus: 'error', syncError: 'GitHub rate limit exceeded. Please retry later.' }
+        )
         return NextResponse.json(
           { error: 'GitHub rate limit exceeded. Please retry later.' },
           { status: 429 }
@@ -111,7 +134,10 @@ export async function POST() {
     }
   }
 
-  await User.findOneAndUpdate({ clerkUserId: userId }, { lastSyncAt: new Date() })
+  await User.findOneAndUpdate(
+    { clerkUserId: userId },
+    { lastSyncAt: new Date(), syncStatus: 'idle', syncError: null }
+  )
 
   // Recompute sessions for the synced window
   const sessionFrom = since

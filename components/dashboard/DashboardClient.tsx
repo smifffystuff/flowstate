@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { MetricCard } from './MetricCard'
 import { ActivityBarChart } from './ActivityBarChart'
 import { SessionTimeline } from './SessionTimeline'
 import { RepoDistributionChart } from './RepoDistributionChart'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 interface InsightsData {
   totalCodingMinutes: number
@@ -151,13 +153,22 @@ function MetricsSkeleton() {
 interface DashboardClientProps {
   initialData: InsightsData
   initialRange: Range
+  githubConnected: boolean
+  shouldAutoSync: boolean
 }
 
-export function DashboardClient({ initialData, initialRange }: DashboardClientProps) {
+export function DashboardClient({
+  initialData,
+  initialRange,
+  githubConnected,
+  shouldAutoSync,
+}: DashboardClientProps) {
   const [range, setRange] = useState<Range>(initialRange)
   const [data, setData] = useState<InsightsData>(initialData)
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [notConnectedDismissed, setNotConnectedDismissed] = useState(false)
+  const autoSyncFired = useRef(false)
 
   const fetchInsights = useCallback(async (r: Range) => {
     setLoading(true)
@@ -177,7 +188,17 @@ export function DashboardClient({ initialData, initialRange }: DashboardClientPr
     fetchInsights(range)
   }, [range, fetchInsights])
 
-  async function handleSync() {
+  // Auto-sync on first visit when GitHub is connected but never synced
+  useEffect(() => {
+    if (!shouldAutoSync || autoSyncFired.current) return
+    autoSyncFired.current = true
+    setSyncing(true)
+    fetch('/api/github/sync', { method: 'POST' })
+      .then(() => fetchInsights(range))
+      .finally(() => setSyncing(false))
+  }, [shouldAutoSync, range, fetchInsights])
+
+  async function handleManualSync() {
     setSyncing(true)
     try {
       await fetch('/api/github/sync', { method: 'POST' })
@@ -191,6 +212,27 @@ export function DashboardClient({ initialData, initialRange }: DashboardClientPr
 
   return (
     <div className="space-y-6">
+      {/* GitHub not-connected banner */}
+      {!githubConnected && !notConnectedDismissed && (
+        <Alert>
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              Connect your GitHub account to start tracking your activity.{' '}
+              <Link href="/settings" className="font-medium underline underline-offset-2">
+                Connect GitHub
+              </Link>
+            </span>
+            <button
+              onClick={() => setNotConnectedDismissed(true)}
+              className="ml-4 text-muted-foreground hover:text-foreground text-sm"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between">
         <Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
           <TabsList>
@@ -206,14 +248,25 @@ export function DashboardClient({ initialData, initialRange }: DashboardClientPr
       ) : isEmpty ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
           <p className="text-muted-foreground">
-            No activity yet. Sync your GitHub account to get started.
+            {githubConnected
+              ? 'No activity yet. Sync your GitHub account to get started.'
+              : 'Connect your GitHub account to start tracking your activity.'}
           </p>
-          <Button onClick={handleSync} disabled={syncing}>
-            {syncing ? 'Syncing…' : 'Sync Now'}
-          </Button>
+          {githubConnected ? (
+            <Button onClick={handleManualSync} disabled={syncing}>
+              {syncing ? 'Syncing…' : 'Sync Now'}
+            </Button>
+          ) : (
+            <Link
+              href="/settings"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground px-4 py-2 hover:bg-primary/90 transition-colors"
+            >
+              Connect GitHub
+            </Link>
+          )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={`space-y-6 transition-opacity ${syncing ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
           {/* Metric cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard

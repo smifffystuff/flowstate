@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { connectDB } from '@/lib/db'
 import Session from '@/lib/models/Session'
 import Event from '@/lib/models/Event'
+import User from '@/lib/models/User'
 import { DashboardClient } from '@/components/dashboard/DashboardClient'
 
 function startOfWeek(date: Date): Date {
@@ -22,6 +23,12 @@ export default async function DashboardPage() {
   const from = startOfWeek(now)
 
   await connectDB()
+
+  const user = await User.findOne({ clerkUserId: userId }).lean()
+  const githubConnected = user?.githubConnected ?? false
+  const lastSyncAt = user?.lastSyncAt ? user.lastSyncAt.toISOString() : null
+  // Signal the client to auto-trigger a sync on first visit
+  const shouldAutoSync = githubConnected && lastSyncAt === null
 
   const sessions = await Session.find({
     userId,
@@ -93,7 +100,12 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm">Your coding activity at a glance.</p>
       </div>
-      <DashboardClient initialData={initialData} initialRange="this-week" />
+      <DashboardClient
+        initialData={initialData}
+        initialRange="this-week"
+        githubConnected={githubConnected}
+        shouldAutoSync={shouldAutoSync}
+      />
     </div>
   )
 }

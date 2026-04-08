@@ -6,6 +6,8 @@ export interface IUser extends Document {
   githubAccessToken: string
   githubConnected: boolean
   lastSyncAt?: Date
+  syncStatus: 'idle' | 'syncing' | 'error'
+  syncError?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -17,6 +19,8 @@ const UserSchema = new Schema<IUser>(
     githubAccessToken: { type: String, default: '' },
     githubConnected: { type: Boolean, default: false },
     lastSyncAt: { type: Date },
+    syncStatus: { type: String, enum: ['idle', 'syncing', 'error'], default: 'idle' },
+    syncError: { type: String, default: null },
   },
   { timestamps: true }
 )

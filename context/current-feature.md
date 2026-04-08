@@ -1,26 +1,16 @@
-# Current Feature: Stage 09 – Dashboard Metrics & Summary Cards
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- `GET /api/insights` returns computed metrics (totalCodingMinutes, flowSessionCount, avgFlowDurationMinutes, longestFlowMinutes, contextSwitchesTotal, avgContextSwitchesPerDay, activeDays, topRepos) for a given date window
-- Dashboard page replaces placeholder with real layout: 4 metric cards, active days row, top repos table
-- `MetricCard` component wraps ShadCN Card with label/value/subtext/trend props
-- Date range selector (Tabs: This Week / Last 7 Days / Last 14 Days) triggers client-side re-fetch
-- Skeleton loading states and empty state with "Sync Now" button render correctly
-- All four metric cards show non-zero values after a sync
+<!-- bullet points of what success looks like -->
 
 ## Notes
 
-- `GET /api/insights` defaults `from` to start of current week (Monday), `to` to now; returns 200 with zero values if no data
-- `totalCodingMinutes` = sum of session `durationMinutes`; `contextSwitchesTotal` = sum of session `contextSwitches`; `topRepos` = top 5 repos by event count via aggregation
-- Dashboard `page.tsx` is an async Server Component — fetches directly from MongoDB, passes data as props to client sub-components
-- Date range tabs are a client component that re-fetches `GET /api/insights` with updated params
-- Empty state shows "No activity yet. Sync your GitHub account to get started." with a Sync Now button calling `POST /api/github/sync`
-- Keep layout clean and spacious — first impression after login
+<!-- additional context, constraints, or details -->
 
 ## History
 
@@ -32,3 +22,4 @@ In Progress
 - **Stage 06 – Events API**: Added `GET /api/events` with `from`/`to`/`repo`/`type`/`limit`/`offset` query params, date validation (400), type enum validation (`commit`, `pr_open`, `pr_update`, `pr_review`), limit clamped to 500, sorted by `timestamp` desc, returns `{ events, total, hasMore }`. Added `GET /api/events/repos` returning distinct sorted repo names for the user. Both routes return 401 for unauthenticated requests. Build passes clean.
 - **Stage 07 – Flow Session Detection Engine**: Added `lib/sessions.ts` with `detectSessions()` gap-heuristic algorithm (`SESSION_GAP_MINUTES = 10`), computing `start`, `end`, `durationMinutes`, `eventIds`, `repos`, `repoCount`, and `contextSwitches` per session; discards sessions with <2 events or <1 min duration. Added `POST /api/sessions/compute` (idempotent delete-then-insert for a time window) and `GET /api/sessions` (sorted descending by `start`, `from`/`to` params with date validation). Updated `POST /api/github/sync` to recompute sessions automatically after inserting events. Build passes clean.
 - **Stage 08 – Activity Timeline UI**: Added `app/(app)/timeline/page.tsx` (async Server Component fetching last 7 days of events + distinct repos directly from MongoDB), `components/timeline/Timeline.tsx` (client component grouping events by local calendar day, re-fetches on date range change, client-side repo/type filtering, skeleton loading + empty states), `components/timeline/EventItem.tsx` (type icon, relative + absolute time via `Intl.DateTimeFormat`, repo Badge, truncated message/title), `components/timeline/FilterBar.tsx` (date range inputs, repo Select, type Select using ShadCN primitives). Sidebar Timeline link was already present. Build passes clean.
+- **Stage 09 – Dashboard Metrics & Summary Cards**: Added `GET /api/insights` (computes totalCodingMinutes, flowSessionCount, avgFlowDurationMinutes, longestFlowMinutes, contextSwitchesTotal, avgContextSwitchesPerDay, activeDays, topRepos from Sessions + Events; defaults to current week; returns zeros when no data). Added `components/dashboard/MetricCard.tsx` (ShadCN Card wrapper). Added `components/dashboard/DashboardClient.tsx` (Tabs date-range selector: This Week / Last 7 Days / Last 14 Days; 4 metric cards; active days row; top repos Table; skeleton loading; empty state with Sync Now button). Replaced dashboard placeholder with async Server Component fetching initial data from MongoDB. Added ShadCN `table` and `tabs` components. Build passes clean.

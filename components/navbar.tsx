@@ -1,23 +1,30 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { UserButton } from "@clerk/nextjs";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function Navbar() {
+export async function Navbar() {
+  const { userId } = await auth();
+
   return (
     <header className="border-b border-border bg-background">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-semibold text-lg tracking-tight">
           FlowState
         </Link>
-        <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/dashboard" className="hover:text-foreground transition-colors">
-            Dashboard
-          </Link>
-          <Link href="/timeline" className="hover:text-foreground transition-colors">
-            Timeline
-          </Link>
-          <Link href="/settings" className="hover:text-foreground transition-colors">
-            Settings
-          </Link>
-        </nav>
+        <div className="flex items-center gap-3">
+          {userId ? (
+            <UserButton />
+          ) : (
+            <Link
+              href="/sign-in"
+              className={cn(buttonVariants({ size: "sm" }))}
+            >
+              Sign In
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );

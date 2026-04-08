@@ -54,3 +54,4 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
 ## Notes
 - No database interaction in this stage — user data lives entirely in Clerk
 - The Clerk `userId` will be used as the primary user identifier throughout the app
+- Use the Clerk mcp server when required

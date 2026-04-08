@@ -29,9 +29,10 @@ interface InsightsData {
 type Range = 'this-week' | 'last-7' | 'last-14'
 
 function formatMinutes(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
+  const total = Math.round(minutes)
+  if (total < 60) return `${total} min`
+  const h = Math.floor(total / 60)
+  const m = total % 60
   return m === 0 ? `${h} hr` : `${h} hr ${m} min`
 }
 

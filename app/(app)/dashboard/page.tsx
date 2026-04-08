@@ -7,10 +7,10 @@ import { DashboardClient } from '@/components/dashboard/DashboardClient'
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date)
-  const day = d.getDay()
+  const day = d.getUTCDay()
   const diff = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
+  d.setUTCDate(d.getUTCDate() + diff)
+  d.setUTCHours(0, 0, 0, 0)
   return d
 }
 
@@ -58,6 +58,23 @@ export default async function DashboardPage() {
     { $project: { _id: 0, repo: '$_id', eventCount: 1 } },
   ])
 
+  // Daily minutes: sum session durations per calendar day (UTC)
+  const minutesByDay = new Map<string, number>()
+  for (const s of sessions) {
+    const key = s.start.toISOString().slice(0, 10)
+    minutesByDay.set(key, (minutesByDay.get(key) ?? 0) + s.durationMinutes)
+  }
+  const dailyMinutes: { date: string; minutes: number }[] = []
+  const cursor = new Date(from)
+  cursor.setUTCHours(0, 0, 0, 0)
+  const windowEnd = new Date(now)
+  windowEnd.setUTCHours(0, 0, 0, 0)
+  while (cursor <= windowEnd) {
+    const key = cursor.toISOString().slice(0, 10)
+    dailyMinutes.push({ date: key, minutes: Math.round(minutesByDay.get(key) ?? 0) })
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+
   const initialData = {
     totalCodingMinutes,
     flowSessionCount,
@@ -67,6 +84,7 @@ export default async function DashboardPage() {
     avgContextSwitchesPerDay,
     activeDays,
     topRepos: topReposAgg,
+    dailyMinutes,
   }
 
   return (

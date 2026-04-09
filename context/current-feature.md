@@ -1,29 +1,16 @@
-# Current Feature: Stage 13 – Polish & Error States
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Error boundary component wrapping Dashboard, Timeline, and Settings individually
-- Global `app/error.tsx` and `app/(app)/error.tsx` error pages with friendly UI
-- `app/not-found.tsx` 404 page with nav and "Go to Dashboard" button
-- All data-fetching components have ShadCN `<Skeleton />` loading states (metric cards, charts, timeline, insights)
-- ShadCN Sonner toast notifications for sync success/failure and GitHub connected events
-- Polished landing page with hero, 3 feature cards, and footer
-- Active nav link highlighting and mobile-responsive navigation
-- App usable at 375px width — no overflow or layout breakage
+<!-- bullet points of what success looks like -->
 
 ## Notes
 
-- Use `npx shadcn@latest add skeleton` and `npx shadcn@latest add sonner` for new components
-- Place `<Toaster />` in root layout
-- No animation libraries — use Tailwind `animate-pulse` and `transition` only
-- All new components must use ShadCN primitives
-- Landing page should be presentable but not a full marketing site
-- Error boundary should log structured `{ error, context }` to console and show "Try again" reload button
-- Wrap pages individually so one broken section doesn't kill the whole page
+<!-- additional context, constraints, or details -->
 
 ## History
 
@@ -38,3 +25,4 @@ In Progress
 - **Stage 09 – Dashboard Metrics & Summary Cards**: Added `GET /api/insights` (computes totalCodingMinutes, flowSessionCount, avgFlowDurationMinutes, longestFlowMinutes, contextSwitchesTotal, avgContextSwitchesPerDay, activeDays, topRepos from Sessions + Events; defaults to current week; returns zeros when no data). Added `components/dashboard/MetricCard.tsx` (ShadCN Card wrapper). Added `components/dashboard/DashboardClient.tsx` (Tabs date-range selector: This Week / Last 7 Days / Last 14 Days; 4 metric cards; active days row; top repos Table; skeleton loading; empty state with Sync Now button). Replaced dashboard placeholder with async Server Component fetching initial data from MongoDB. Added ShadCN `table` and `tabs` components. Build passes clean.
 - **Stage 10 – Dashboard Visualisations**: Installed `recharts`. Added three chart components (all `'use client'`): `ActivityBarChart` (daily coding minutes bar chart with `m`/`h` Y-axis labels and "X hr Y min" hover tooltips), `SessionTimeline` (24-hour CSS block timeline fetching today's sessions from `GET /api/sessions`, with hover tooltips showing time/duration/repos), `RepoDistributionChart` (percentage bar list for top 5 repos). Extended `GET /api/insights` with `dailyMinutes` array (UTC, zero-filled for all days in window). Updated dashboard layout: metric cards → active days → charts side-by-side → repo distribution. Fixed `startOfWeek` to use UTC methods; fixed `getRangeDates` in client to send `Date.UTC()` of local Monday to prevent BST/UTC day-offset bug. Build passes clean. Verified with Playwright MCP against live data.
 - **Stage 12 – Sync UX & Auto-Sync on Login**: Extended `User` model with `syncStatus` (`idle`/`syncing`/`error`) and `syncError` fields; `POST /api/github/sync` sets these throughout. Added `GET /api/sync/status` returning sync state + GitHub connection flag. Auto-sync triggers client-side on first dashboard visit when GitHub is connected but `lastSyncAt` is null. `SyncButton` component (outline variant, `Loader2` spinner, `CheckCircle2`/`AlertCircle` states, relative "last synced" time) placed in the app sidebar. GitHub-not-connected dismissible `Alert` banner on Dashboard with link to Settings; empty state shows Connect GitHub link instead of Sync Now. Dashboard content dims with opacity overlay while syncing, re-fetches insights on completion. Also fixed a pre-existing bug: `author=@me` is invalid on the repo commits endpoint (only valid in GitHub search API), causing commits to silently return empty — fixed by fetching the authenticated user's login from `/user` and passing it as the `author` filter. Build passes clean.
+- **Stage 13 – Polish & Error States**: Added `ErrorBoundary` class component (logs `{ error, context }`, "Try again" reload button) wrapping Dashboard, Timeline, and Settings individually. Added `app/error.tsx` and `app/(app)/error.tsx` Next.js error pages and `app/not-found.tsx` 404 page. Installed ShadCN `sonner`; added `<Toaster />` to root layout; wired toast notifications for sync success/failure in `SyncButton` and "GitHub connected" toast in `DashboardClient` via `?connected=1` redirect from OAuth callback. Polished landing page with hero section, 3 feature cards (GitHub powered, Automatic flow detection, No manual tracking), and footer. Replaced `AppSidebar` with active nav link highlighting via `usePathname` and a mobile hamburger menu. Responsive layout fixes: `min-w-0` on main content, `px-4 md:px-8` padding, `grid-cols-2 sm:flex` FilterBar, scrollable tabs row. Homepage auto-redirects authenticated users to `/dashboard` via `proxy.ts`. Build passes clean.

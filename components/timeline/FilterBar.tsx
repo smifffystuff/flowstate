@@ -36,14 +36,14 @@ export function FilterBar({ filters, repos, onChange }: FilterBarProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-3 items-end">
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 items-end">
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">From</label>
         <Input
           type="date"
           value={filters.from}
           onChange={(e) => update('from', e.target.value)}
-          className="w-36"
+          className="w-full sm:w-36"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -52,13 +52,13 @@ export function FilterBar({ filters, repos, onChange }: FilterBarProps) {
           type="date"
           value={filters.to}
           onChange={(e) => update('to', e.target.value)}
-          className="w-36"
+          className="w-full sm:w-36"
         />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Repository</label>
         <Select value={filters.repo} onValueChange={(v) => v && update('repo', v)}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="All Repos" />
           </SelectTrigger>
           <SelectContent>
@@ -74,7 +74,7 @@ export function FilterBar({ filters, repos, onChange }: FilterBarProps) {
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Type</label>
         <Select value={filters.type} onValueChange={(v) => v && update('type', v)}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-full sm:w-36">
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>

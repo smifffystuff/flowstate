@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ClerkProvider appearance={{ theme: shadcn }}>
           <Navbar />
           <main className="flex-1">{children}</main>
+          <Toaster />
         </ClerkProvider>
       </body>
     </html>

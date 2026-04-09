@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { MetricCard } from './MetricCard'
 import { ActivityBarChart } from './ActivityBarChart'
 import { SessionTimeline } from './SessionTimeline'
@@ -169,6 +171,17 @@ export function DashboardClient({
   const [syncing, setSyncing] = useState(false)
   const [notConnectedDismissed, setNotConnectedDismissed] = useState(false)
   const autoSyncFired = useRef(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('connected') === '1') {
+      toast.success('GitHub account connected')
+      // Clean up the query param without a full navigation
+      const url = new URL(window.location.href)
+      url.searchParams.delete('connected')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams])
 
   const fetchInsights = useCallback(async (r: Range) => {
     setLoading(true)
@@ -233,7 +246,7 @@ export function DashboardClient({
         </Alert>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="overflow-x-auto">
         <Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
           <TabsList>
             <TabsTrigger value="this-week">This Week</TabsTrigger>

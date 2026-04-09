@@ -20,7 +20,7 @@ export default async function AppLayout({
   return (
     <div className="flex flex-1">
       <AppSidebar githubConnected={githubConnected} lastSyncAt={lastSyncAt} />
-      <div className="flex-1 px-8 py-6">{children}</div>
+      <div className="flex-1 px-4 md:px-8 py-6 mt-12 md:mt-0 min-w-0">{children}</div>
     </div>
   );
 }

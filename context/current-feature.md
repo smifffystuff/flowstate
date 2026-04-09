@@ -1,16 +1,28 @@
-# Current Feature
+# Current Feature: Stage 14 – Deployment to Vercel
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- Vercel project is linked to the repository with Next.js preset, `next build` command, and `.next` output directory
+- All required environment variables are configured in Vercel (Production, Preview, Development)
+- GitHub OAuth App has a production callback URL pointing to the deployed domain
+- Clerk production instance is configured with GitHub and Google providers and the production domain as an allowed redirect
+- MongoDB Atlas cluster allows connections from Vercel's IP ranges (or `0.0.0.0/0` for MVP)
+- Production deployment builds successfully with no errors
+- All smoke test checklist items pass (landing page, sign-in, GitHub connect, sync, timeline, dashboard insights)
+- No secrets exposed in client-side bundles
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- Use the Vercel MCP server where applicable for project setup and env var management
+- `GITHUB_REDIRECT_URI` must be updated to `https://<production-domain>/api/github/callback`
+- For preview deployments, consider using `VERCEL_URL` dynamically or a separate GitHub OAuth App
+- MongoDB Atlas free tier (M0) is sufficient for MVP; `0.0.0.0/0` network access is acceptable for MVP but should be tightened later
+- Do not commit `.env.local` (already in `.gitignore`)
+- The Vercel CLI (`vercel env pull`) can sync production env vars to local `.env.local` for debugging
 
 ## History
 

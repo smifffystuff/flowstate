@@ -81,3 +81,4 @@ After deploying, verify:
 - Do not commit `.env.local` — it is already in `.gitignore`
 - The Vercel CLI (`vercel env pull`) can sync production env vars to local `.env.local` for debugging
 - MongoDB Atlas free tier (M0) is sufficient for MVP
+- Use the vercel MCP server where applicable

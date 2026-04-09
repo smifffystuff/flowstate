@@ -1,28 +1,16 @@
-# Current Feature: Stage 14 – Deployment to Vercel
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Vercel project is linked to the repository with Next.js preset, `next build` command, and `.next` output directory
-- All required environment variables are configured in Vercel (Production, Preview, Development)
-- GitHub OAuth App has a production callback URL pointing to the deployed domain
-- Clerk production instance is configured with GitHub and Google providers and the production domain as an allowed redirect
-- MongoDB Atlas cluster allows connections from Vercel's IP ranges (or `0.0.0.0/0` for MVP)
-- Production deployment builds successfully with no errors
-- All smoke test checklist items pass (landing page, sign-in, GitHub connect, sync, timeline, dashboard insights)
-- No secrets exposed in client-side bundles
+<!-- bullet points of what success looks like -->
 
 ## Notes
 
-- Use the Vercel MCP server where applicable for project setup and env var management
-- `GITHUB_REDIRECT_URI` must be updated to `https://<production-domain>/api/github/callback`
-- For preview deployments, consider using `VERCEL_URL` dynamically or a separate GitHub OAuth App
-- MongoDB Atlas free tier (M0) is sufficient for MVP; `0.0.0.0/0` network access is acceptable for MVP but should be tightened later
-- Do not commit `.env.local` (already in `.gitignore`)
-- The Vercel CLI (`vercel env pull`) can sync production env vars to local `.env.local` for debugging
+<!-- additional context, constraints, or details -->
 
 ## History
 
@@ -38,3 +26,4 @@ In Progress
 - **Stage 10 – Dashboard Visualisations**: Installed `recharts`. Added three chart components (all `'use client'`): `ActivityBarChart` (daily coding minutes bar chart with `m`/`h` Y-axis labels and "X hr Y min" hover tooltips), `SessionTimeline` (24-hour CSS block timeline fetching today's sessions from `GET /api/sessions`, with hover tooltips showing time/duration/repos), `RepoDistributionChart` (percentage bar list for top 5 repos). Extended `GET /api/insights` with `dailyMinutes` array (UTC, zero-filled for all days in window). Updated dashboard layout: metric cards → active days → charts side-by-side → repo distribution. Fixed `startOfWeek` to use UTC methods; fixed `getRangeDates` in client to send `Date.UTC()` of local Monday to prevent BST/UTC day-offset bug. Build passes clean. Verified with Playwright MCP against live data.
 - **Stage 12 – Sync UX & Auto-Sync on Login**: Extended `User` model with `syncStatus` (`idle`/`syncing`/`error`) and `syncError` fields; `POST /api/github/sync` sets these throughout. Added `GET /api/sync/status` returning sync state + GitHub connection flag. Auto-sync triggers client-side on first dashboard visit when GitHub is connected but `lastSyncAt` is null. `SyncButton` component (outline variant, `Loader2` spinner, `CheckCircle2`/`AlertCircle` states, relative "last synced" time) placed in the app sidebar. GitHub-not-connected dismissible `Alert` banner on Dashboard with link to Settings; empty state shows Connect GitHub link instead of Sync Now. Dashboard content dims with opacity overlay while syncing, re-fetches insights on completion. Also fixed a pre-existing bug: `author=@me` is invalid on the repo commits endpoint (only valid in GitHub search API), causing commits to silently return empty — fixed by fetching the authenticated user's login from `/user` and passing it as the `author` filter. Build passes clean.
 - **Stage 13 – Polish & Error States**: Added `ErrorBoundary` class component (logs `{ error, context }`, "Try again" reload button) wrapping Dashboard, Timeline, and Settings individually. Added `app/error.tsx` and `app/(app)/error.tsx` Next.js error pages and `app/not-found.tsx` 404 page. Installed ShadCN `sonner`; added `<Toaster />` to root layout; wired toast notifications for sync success/failure in `SyncButton` and "GitHub connected" toast in `DashboardClient` via `?connected=1` redirect from OAuth callback. Polished landing page with hero section, 3 feature cards (GitHub powered, Automatic flow detection, No manual tracking), and footer. Replaced `AppSidebar` with active nav link highlighting via `usePathname` and a mobile hamburger menu. Responsive layout fixes: `min-w-0` on main content, `px-4 md:px-8` padding, `grid-cols-2 sm:flex` FilterBar, scrollable tabs row. Homepage auto-redirects authenticated users to `/dashboard` via `proxy.ts`. Build passes clean.
+- **Stage 14 – Deployment to Vercel**: Installed Vercel CLI v50.42.0. Linked repo to Vercel project `flowstate` (team: Martin Smith's projects) via `vercel link`, connecting the GitHub repo for automatic git-based deployments. Configured all 11 environment variables (Clerk, MongoDB, GitHub OAuth, `TOKEN_ENCRYPTION_KEY`) across Production/Preview/Development via Vercel dashboard; pulled to `.env.local` via `vercel env pull`. Added `.env*.local` to `.gitignore`. Deployed to production — build clean, all 15 routes as dynamic server-rendered functions. Production URL: https://flowstate-pi-ten.vercel.app. Going forward, pushing to `main` triggers automatic production deploys; feature branches get preview deployments.

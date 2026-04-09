@@ -4,7 +4,9 @@ import { connectDB } from '@/lib/db'
 import Session from '@/lib/models/Session'
 import Event from '@/lib/models/Event'
 import User from '@/lib/models/User'
+import { Suspense } from 'react'
 import { DashboardClient } from '@/components/dashboard/DashboardClient'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date)
@@ -100,12 +102,16 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm">Your coding activity at a glance.</p>
       </div>
-      <DashboardClient
-        initialData={initialData}
-        initialRange="this-week"
-        githubConnected={githubConnected}
-        shouldAutoSync={shouldAutoSync}
-      />
+      <ErrorBoundary context="dashboard">
+        <Suspense>
+          <DashboardClient
+            initialData={initialData}
+            initialRange="this-week"
+            githubConnected={githubConnected}
+            shouldAutoSync={shouldAutoSync}
+          />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   )
 }

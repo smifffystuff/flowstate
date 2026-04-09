@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 type SyncState = 'idle' | 'syncing' | 'success' | 'error'
 
@@ -41,16 +42,20 @@ export function SyncButton({ lastSyncAt: initialLastSyncAt, onSyncComplete }: Sy
     try {
       const res = await fetch('/api/github/sync', { method: 'POST' })
       if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
         setSyncState('error')
+        toast.error(`Sync failed: ${body.error ?? res.statusText}`)
         return
       }
       const now = new Date().toISOString()
       setLastSyncAt(now)
       setSyncState('success')
+      toast.success('GitHub synced successfully')
       onSyncComplete?.()
       setTimeout(() => setSyncState('idle'), 3000)
     } catch {
       setSyncState('error')
+      toast.error('Sync failed. Please try again.')
     }
   }
 

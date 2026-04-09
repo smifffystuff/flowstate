@@ -56,5 +56,5 @@ export async function GET(request: NextRequest) {
   await getOrCreateUser(userId, email)
   await setGithubToken(userId, accessToken)
 
-  redirect('/dashboard')
+  redirect('/dashboard?connected=1')
 }

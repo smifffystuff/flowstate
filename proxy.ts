@@ -8,6 +8,7 @@ const isProtectedRoute = createRouteMatcher([
 ])
 
 const isSignUpRoute = createRouteMatcher(['/sign-up(.*)'])
+const isHomePage = createRouteMatcher(['/'])
 
 export default clerkMiddleware(async (auth, request) => {
   if (isSignUpRoute(request)) {
@@ -15,6 +16,12 @@ export default clerkMiddleware(async (auth, request) => {
   }
   if (isProtectedRoute(request)) {
     await auth.protect()
+  }
+  if (isHomePage(request)) {
+    const { userId } = await auth()
+    if (userId) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
   }
 })
 

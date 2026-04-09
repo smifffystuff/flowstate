@@ -1,16 +1,29 @@
-# Current Feature
+# Current Feature: Stage 13 – Polish & Error States
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- bullet points of what success looks like -->
+- Error boundary component wrapping Dashboard, Timeline, and Settings individually
+- Global `app/error.tsx` and `app/(app)/error.tsx` error pages with friendly UI
+- `app/not-found.tsx` 404 page with nav and "Go to Dashboard" button
+- All data-fetching components have ShadCN `<Skeleton />` loading states (metric cards, charts, timeline, insights)
+- ShadCN Sonner toast notifications for sync success/failure and GitHub connected events
+- Polished landing page with hero, 3 feature cards, and footer
+- Active nav link highlighting and mobile-responsive navigation
+- App usable at 375px width — no overflow or layout breakage
 
 ## Notes
 
-<!-- additional context, constraints, or details -->
+- Use `npx shadcn@latest add skeleton` and `npx shadcn@latest add sonner` for new components
+- Place `<Toaster />` in root layout
+- No animation libraries — use Tailwind `animate-pulse` and `transition` only
+- All new components must use ShadCN primitives
+- Landing page should be presentable but not a full marketing site
+- Error boundary should log structured `{ error, context }` to console and show "Try again" reload button
+- Wrap pages individually so one broken section doesn't kill the whole page
 
 ## History
 

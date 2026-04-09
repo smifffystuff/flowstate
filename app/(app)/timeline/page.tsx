@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db'
 import Event from '@/lib/models/Event'
 import User from '@/lib/models/User'
 import { Timeline } from '@/components/timeline/Timeline'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default async function TimelinePage() {
   const { userId } = await auth()
@@ -35,11 +36,13 @@ export default async function TimelinePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
-      <Timeline
-        initialEvents={initialEvents}
-        repos={(repos as string[]).sort()}
-        githubConnected={githubConnected}
-      />
+      <ErrorBoundary context="timeline">
+        <Timeline
+          initialEvents={initialEvents}
+          repos={(repos as string[]).sort()}
+          githubConnected={githubConnected}
+        />
+      </ErrorBoundary>
     </div>
   )
 }
